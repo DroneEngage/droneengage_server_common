@@ -1,6 +1,6 @@
 {
   "name": "droneengage_server_common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared configuration loader, helpers, and utilities for DroneEngage server modules (authenticator, comm server, storage server).",
   "main": "index.js",
   "scripts": {
