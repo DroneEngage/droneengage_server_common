@@ -1,10 +1,13 @@
-# pure-gates - every push, pure logic only.
+# pure-gates - every push.
 #
-#   smoke    `require('./index.js')` - the package must load clean.
-#            server_common is a dependency of all three Node.js
-#            servers, so a broken push here breaks every consumer.
+#   fmt      cargo fmt --check
+#   clippy   cargo clippy --all-targets, warnings are errors
+#   tests    cargo test
 #
-# No servers, no SITL, no sim bring-up.
+# This crate is a dependency of every DroneEngage Rust server: a broken
+# push here breaks every consumer.
+#
+# No servers, no network.
 name: pure-gates
 on: [push, pull_request]
 
@@ -14,13 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      - name: toolchain
+        run: rustup update stable && rustup default stable && rustup component add rustfmt clippy
 
-      # package-lock.json is gitignored in this repo - npm install, not ci
-      - name: install
-        run: npm install --no-audit --no-fund
+      - name: fmt
+        run: cargo fmt --check
 
-      - name: smoke load
-        run: npm test
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: tests
+        run: cargo test

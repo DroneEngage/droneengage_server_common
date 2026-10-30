@@ -1,80 +1,56 @@
 # droneengage_server_common
 
-Shared configuration loader, helpers, and utilities for DroneEngage server
-modules (authenticator, comm server, storage server).
+Shared code of the DroneEngage Rust servers (authenticator, comm server,
+storage server). It replaces the Node.js `droneengage_server_common` npm
+package, whose behaviour the modules keep:
 
-## Install
+| Module | From the npm package | What it does |
+|---|---|---|
+| `config` | `js_serverConfig.js`, `hlp_args.js`, `js_3rd_StripJsonComments.js` | `server.config` loading: JSON with comments, `<file>.local` overlay, environment overrides, `$$HASH$$` handling; command line arguments |
+| `config_handler` | `js_config_handler.js` | `$$HASH$$('plaintext')` directives become bcrypt hashes, in memory and in the file |
+| `validation` | `hlp_validation.js` | alphanumeric, email, version and admin credential checks |
+| `password` | `hlp_password.js` | bcrypt access codes with legacy plaintext upgrade |
+| `strings` | `hlp_strings.js`, `js_styleHelper.js` | random strings, padding, traffic CSS class |
+| `colors` | `js_colors.js` | ANSI console colors |
+| `util`, `js` | (the servers' JavaScript semantics) | JSON values handled like JavaScript did: `String()`, `Number()`, `parseInt`, `JSON.stringify` output, property access errors |
+| `logger` | (`node-file-logger`) | the daily `Logs_YYYY-MM-DD.log` file logger |
+| `net` | (`https`, `ws`) | TLS acceptors and connectors, WebSocket limits |
+| `s2s_auth` | (the servers' `js_s2s_auth.js`) | Ed25519 / HMAC-SHA256 server-to-server authentication |
 
-Add to a server's `package.json`:
+## Use
 
-```json
-"dependencies": {
-  "droneengage_server_common": "git+ssh://git@github.com:DroneEngage/droneengage_server_common.git#v1.0.0"
+In a server's `Cargo.toml`:
+
+```toml
+[dependencies]
+droneengage_server_common = { git = "https://github.com/HefnySco/prv_droneengage_server_common", branch = "pr_rust" }
+```
+
+Loading a configuration with the server's own environment overrides:
+
+```rust
+use droneengage_server_common::config::{Config, EnvOverride, LoadOptions};
+
+fn debug(cfg: &mut serde_json::Map<String, serde_json::Value>, v: &str) {
+    cfg.insert("debug_logging".into(), (v == "true" || v == "1").into());
 }
+
+let overrides = [
+    ("DE_MY_ENV", EnvOverride::Key("config_key")),
+    ("DE_MY_FLAG", EnvOverride::Transform(debug)),
+];
+let cfg = Config::load_with(
+    &std::env::current_dir()?,
+    "server.config",
+    &LoadOptions { env: &|k| std::env::var(k).ok(), log: &|l| println!("{}", l), overrides: &overrides, hash_handling: true },
+)?;
 ```
 
-Then `npm install`.
+## Test
 
-## Usage
-
-### Config loader
-
-Create a thin wrapper in your server (e.g. `src/js_serverConfig.js`):
-
-```js
-const common = require('droneengage_server_common');
-const path = require('path');
-
-module.exports = common.create({
-    configDir: path.join(__dirname, '..'),
-    enableHashHandling: true,   // process $$HASH$$('...') directives
-    envOverrides: {
-        'DE_MY_ENV': 'config_key',                    // simple: assign env value to config key
-        'DE_MY_FLAG': (cfg, val) => { cfg.flag = (val === '1'); }  // transform
-    }
-});
+```bash
+cargo test
 ```
 
-Then use as before:
-
-```js
-const m_serverconfig = require('./js_serverConfig.js');
-m_serverconfig.init();              // or init('server.config.production')
-const cfg = m_serverconfig.m_configuration;
-```
-
-### Local config override
-
-Place a `server.config.local` file next to `server.config`. Its top-level
-keys are merged on top (shallow merge). The file is git-ignored and supports
-C-style comments, exactly like `server.config`.
-
-### Helpers
-
-```js
-const { helpers, dumperror, configHandler, password } = require('droneengage_server_common');
-
-helpers.stripJsonComments(jsonText);
-helpers.validation.isEmail(str);
-helpers.strings.generateRandomString(32);
-helpers.colors.Colors;
-helpers.args.getArgs();
-dumperror.fn_dumperror(err);
-configHandler.handleConfig(configObj, configPath);
-password.hash(plaintext);
-```
-
-## What's included
-
-| Module | Description |
-|---|---|
-| `lib/js_serverConfig.js` | Generic config loader factory (local override + `$$HASH$$` + env hooks) |
-| `lib/dumperror.js` | Error-printing helpers (all historical API names) |
-| `lib/helpers/js_3rd_StripJsonComments.js` | Strip C-style comments from JSON |
-| `lib/helpers/hlp_args.js` | CLI argument parser |
-| `lib/helpers/hlp_strings.js` | String utilities + re-exported validation |
-| `lib/helpers/hlp_validation.js` | Input validation (alphanumeric, email, admin creds, ...) |
-| `lib/helpers/js_colors.js` | ANSI color codes |
-| `lib/helpers/js_styleHelper.js` | CSS traffic-level class helper |
-| `lib/helpers/js_config_handler.js` | `$$HASH$$('...')` → bcrypt directive processor |
-| `lib/helpers/hlp_password.js` | bcrypt hash/verify with legacy plaintext fallback |
+The Node.js package stays available on `master` and its tags (`v1.0.1`) for
+the JavaScript servers.
