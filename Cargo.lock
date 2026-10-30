@@ -249,6 +249,7 @@ dependencies = [
  "ed25519-dalek",
  "futures-util",
  "hmac",
+ "httparse",
  "minijinja",
  "rand 0.8.8",
  "regex",

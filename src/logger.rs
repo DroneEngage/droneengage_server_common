@@ -75,7 +75,9 @@ impl FileLogger {
         FileLogger { m_dir: p_dir, m_detailed: p_detailed, m_lock: Mutex::new(()) }
     }
 
-    fn log(
+    /// One line at p_level (Info, Warn, Error, Debug, Trace) with the
+    /// optional service and method names and object.
+    pub fn write(
         &self,
         p_level: &str,
         p_message: &str,
@@ -113,15 +115,19 @@ impl FileLogger {
     }
 
     pub fn info(&self, p_message: &str, p_service: Option<&str>, p_obj: Option<&Value>) {
-        self.log("Info", p_message, p_service, None, p_obj);
+        self.write("Info", p_message, p_service, None, p_obj);
     }
 
     pub fn warn(&self, p_message: &str, p_service: Option<&str>, p_obj: Option<&Value>) {
-        self.log("Warn", p_message, p_service, None, p_obj);
+        self.write("Warn", p_message, p_service, None, p_obj);
     }
 
     pub fn error(&self, p_message: &str, p_service: Option<&str>, p_obj: Option<&Value>) {
-        self.log("Error", p_message, p_service, None, p_obj);
+        self.write("Error", p_message, p_service, None, p_obj);
+    }
+
+    pub fn debug(&self, p_message: &str, p_service: Option<&str>, p_obj: Option<&Value>) {
+        self.write("Debug", p_message, p_service, None, p_obj);
     }
 }
 
@@ -144,7 +150,7 @@ mod tests {
         let v_dir = tempfile::tempdir().unwrap();
         let v_log = FileLogger::new(v_dir.path().join("logs"), false, Some("GMT"));
         v_log.info("WS Created from Party", Some("fn_onConnect_Handler"), Some(&json!({"f": "k"})));
-        v_log.log("Debug", "hidden", None, None, None);
+        v_log.write("Debug", "hidden", None, None, None);
         let v_files: Vec<_> = std::fs::read_dir(v_dir.path().join("logs")).unwrap().collect();
         assert_eq!(v_files.len(), 1);
         let v_text = std::fs::read_to_string(v_files[0].as_ref().unwrap().path()).unwrap();
