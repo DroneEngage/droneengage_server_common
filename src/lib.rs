@@ -8,6 +8,8 @@
 //! - `logger`: the daily file logger (node-file-logger's format)
 //! - `net`: TLS acceptors and connectors, WebSocket settings
 //! - `s2s_auth`: Ed25519 / HMAC server-to-server authentication
+//! - `web`: Express-compatible HTTP, sessions, CSRF, rate limits and views
+//!   for the admin dashboards
 //! - `validation`, `password`, `strings`, `colors`: helpers
 
 pub mod colors;
@@ -21,3 +23,4 @@ pub mod s2s_auth;
 pub mod strings;
 pub mod util;
 pub mod validation;
+pub mod web;
