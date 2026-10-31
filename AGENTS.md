@@ -1,29 +1,18 @@
 # AGENTS.md — droneengage_server_common
 
-Shared Rust crate of the DroneEngage servers (authenticator, comm
-server, storage server, udp proxy) — the replacement for the old
-`droneengage_server_common` npm package, whose behaviour it keeps. A
-library, not a binary: the servers depend on it via git (branch
-`pr_rust`) or a path dep. See `../../AGENTS.md`.
+Shared Rust crate of the DroneEngage servers — the replacement for the
+old `droneengage_server_common` npm package (config loader, `$$HASH$$`,
+s2s auth, logger, JS-compatible JSON semantics). A library, not a binary.
+
+## Quickstart
 
     cargo build
     cargo test
 
-## What it provides
+## Index — `.agents/wiki/`
 
-- `config` — `server.config` loading: JSON with C-style comments,
-  `<file>.local` overlay merge, environment overrides, `$$HASH$$`
-  handling, command-line arguments.
-- `config_handler` — `$$HASH$$('plaintext')` → bcrypt directives.
-- `validation` / `password` — credential checks; bcrypt access codes
-  with legacy plaintext upgrade.
-- `strings`, `colors`, `util`, `js` — random strings, padding, ANSI
-  colors, JavaScript-compatible JSON value coercion (`String()`,
-  `Number()`, `parseInt`, `JSON.stringify` output).
-- `logger` — the daily `Logs_YYYY-MM-DD.log` file logger.
-- `net`, `ws_accept`, `web` — rustls TLS acceptors/connectors,
-  WebSocket limits, HTTP/template helpers.
-- `s2s_auth` — Ed25519 / HMAC-SHA256 server-to-server authentication.
+| File | What it covers |
+|---|---|
+| [`agents_overview.md`](.agents/wiki/agents_overview.md) | module-by-module contents, npm→Rust behaviour mapping |
 
-`src/` mirrors that list one file per module. `README.md` has the full
-npm→Rust mapping table and a usage example.
+See `../../AGENTS.md` for the workspace and server conventions.
