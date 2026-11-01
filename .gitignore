@@ -4,3 +4,7 @@ package-lock.json
 *.log
 .vscode/
 .DS_Store
+
+# written by consumers' local_server_common.sh - marks this checkout
+# as a cargo directory-source crate (local override for the git dep)
+.cargo-checksum.json
