@@ -10,13 +10,20 @@ use rand::RngCore;
 use serde_json::{json, Map, Value};
 use sha2::Sha256;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use subtle::ConstantTimeEq;
 
 use crate::util::now_ms;
 
 pub const COOKIE_NAME: &str = "connect.sid";
 pub const MAX_AGE_MS: i64 = 2 * 60 * 60 * 1000;
+
+/// The session cookie name for this install: `connect.sid` plus the
+/// install tag, so a shadow next to production keeps its own cookie.
+pub fn cookie_name() -> &'static str {
+    static NAME: OnceLock<String> = OnceLock::new();
+    NAME.get_or_init(|| format!("{}.{}", COOKIE_NAME, crate::util::install_tag()))
+}
 
 /// cookie-signature sign: value.base64(HMAC) without padding.
 pub fn sign(p_value: &str, p_secret: &str) -> String {
@@ -154,7 +161,7 @@ impl Store {
         let v_value = format!("s:{}", sign(&p_session.id, p_secret));
         Some(format!(
             "{}={}; Path=/; Expires={}; HttpOnly{}; SameSite=Strict",
-            COOKIE_NAME,
+            cookie_name(),
             super::http::encode_component(&v_value),
             super::http::http_date(v_expires),
             if p_secure_cookie { "; Secure" } else { "" }
@@ -196,7 +203,7 @@ mod tests {
         let mut s = v_store.load(None, "k");
         s.set("error", value("x"));
         let v_cookie = v_store.commit(&s, "k", true, true).unwrap();
-        assert!(v_cookie.starts_with("connect.sid=s%3A"));
+        assert!(v_cookie.starts_with(&format!("{}=s%3A", cookie_name())));
         let v_raw =
             super::super::http::percent_decode(v_cookie.split(';').next().unwrap().split_once('=').unwrap().1).unwrap();
         let s2 = v_store.load(Some(&v_raw), "k");

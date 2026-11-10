@@ -3,13 +3,30 @@
 //! `parseInt`, `parseFloat`, `===`), `JSON.stringify` output (number
 //! formatting, key order), wall-clock time and timestamps.
 
+use base64::Engine as _;
 use serde_json::{Map, Value};
+use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
+use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// `Date.now()`.
 pub fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
+}
+
+/// A short tag stable for one install dir (the process working directory)
+/// and different between two installs on the same host — production vs
+/// shadow. Cookie names append it so co-hosted servers never share them.
+pub fn install_tag() -> &'static str {
+    static TAG: OnceLock<String> = OnceLock::new();
+    TAG.get_or_init(|| {
+        let v_dir = std::env::current_dir()
+            .map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()).to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let v_hash = Sha256::digest(v_dir.as_bytes());
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&v_hash[..5])
+    })
 }
 
 /// `Number.prototype.toString()` for a double.

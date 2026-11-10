@@ -4,9 +4,17 @@
 use base64::Engine as _;
 use rand::Rng;
 use sha1::{Digest, Sha1};
+use std::sync::OnceLock;
 use subtle::ConstantTimeEq;
 
 pub const COOKIE_NAME: &str = "_csrf";
+
+/// The CSRF cookie name for this install: `_csrf` plus the install tag
+/// (see session::cookie_name).
+pub fn cookie_name() -> &'static str {
+    static NAME: OnceLock<String> = OnceLock::new();
+    NAME.get_or_init(|| format!("{}.{}", COOKIE_NAME, crate::util::install_tag()))
+}
 
 /// csrf.secretSync(): 18 random bytes, base64url.
 pub fn new_secret() -> String {
