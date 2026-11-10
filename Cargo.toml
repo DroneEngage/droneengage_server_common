@@ -1,6 +1,6 @@
 [package]
 name = "droneengage_server_common"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 description = "Shared code of the DroneEngage Rust servers (authenticator, comm server, storage server): configuration loader, JavaScript-compatible JSON handling, file logger, TLS/WebSocket plumbing, S2S authentication, validation and password hashing."
 authors = ["Mohammad Said Hefny <mohammad.hefny@gmail.com>"]
