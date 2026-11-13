@@ -23,7 +23,7 @@ In a server's `Cargo.toml`:
 
 ```toml
 [dependencies]
-droneengage_server_common = { git = "https://github.com/HefnySco/prv_droneengage_server_common", branch = "pr_rust" }
+droneengage_server_common = { git = "https://github.com/DroneEngage/droneengage_server_common", branch = "master" }
 ```
 
 Loading a configuration with the server's own environment overrides:
