@@ -8,3 +8,10 @@ package-lock.json
 # written by consumers' local_server_common.sh - marks this checkout
 # as a cargo directory-source crate (local override for the git dep)
 .cargo-checksum.json
+
+# never publish: private keys, per-machine config, shared secrets
+server.config.local
+*.key
+*_private.pem
+s2s_shared_secret.key*
+.env.local
